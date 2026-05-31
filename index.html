@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Diagnóstico de piel personalizado con IA — Riman Korean Dermocosmetics.">
+<meta property="og:title" content="RIMAN · Diagnóstico de piel con IA">
+<meta property="og:description" content="Sube 3 fotos, responde 5 preguntas y recibe tu rutina Riman personalizada.">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/68fb44859191ba6a66edfd78/317541b2-c2b7-493d-a19b-11da2874f101/RimanLogo.png?format=1500w">
+<title>RIMAN · Diagnóstico de piel con IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  /* Riman brand palette — extracted from ICD packaging */
+  --black:   #0D0D0D;
+  --white:   #FFFFFF;
+  --pearl:   #FAF8F4;      /* warm white, ICD packaging base */
+  --cream:   #F3EDE3;      /* beige clair packaging */
+  --sand:    #E8DDD0;      /* warm sand border */
+  --gold:    #B8975A;      /* ICD gold accent */
+  --gold-lt: #D4B483;      /* lighter gold for hover */
+  --gold-pale: #F5EDD9;    /* very pale gold tint */
+  --mist:    #9A9189;      /* warm muted text */
+  --taupe:   #6B5F53;      /* darker warm text */
+  --error:   #9B3A2A;
+  --ff: 'Montserrat', sans-serif;
+  --fs: 'Cormorant Garamond', serif;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--ff);
+  color: var(--black);
+  background: var(--pearl);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+.app {
+  width: 100%;
+  max-width: 480px;
+  background: var(--white);
+  min-height: 100vh;
+  position: relative;
+}
+@media (min-width: 500px) {
+  .app { border-left: 1px solid var(--sand); border-right: 1px solid var(--sand); }
+}
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero {
+  background: var(--pearl);
+  text-align: center;
+  padding: 0;
+  border-bottom: 1px solid var(--sand);
+  overflow: hidden;
+  position: relative;
+}
+.hero-bg-lines {
+  position: absolute; inset: 0; pointer-events: none; opacity: .06;
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 39px, var(--gold) 39px, var(--gold) 40px
+  );
+}
+.hero-inner { position: relative; z-index: 1; padding: 2.5rem 1.5rem 2rem; }
+.logo-wrap { margin-bottom: 1.25rem; }
+.logo-img {
+  width: 160px; height: auto; display: block; margin: 0 auto;
+  filter: brightness(0); /* force black */
+}
+.logo-sub {
+  font-size: 8px; letter-spacing: .45em; color: var(--gold);
+  text-transform: uppercase; margin-top: 5px; font-weight: 500;
+}
+.hero-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 1.25rem auto;
+  max-width: 220px;
+}
+.hero-divider-line { flex: 1; height: 1px; background: var(--sand); }
+.hero-divider-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0;
+}
+.hero h1 {
+  font-family: var(--fs); font-size: 28px; font-weight: 500;
+  line-height: 1.15; color: var(--black); margin-bottom: .5rem;
+  letter-spacing: .01em;
+}
+.hero h1 em { font-style: italic; color: var(--taupe); }
+.hero p {
+  font-size: 11px; color: var(--mist); line-height: 1.7;
+  letter-spacing: .04em; max-width: 280px; margin: 0 auto 1.5rem;
+}
+.hero-pills {
+  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+}
+.hero-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 13px; border: 1px solid var(--sand);
+  border-radius: 20px; font-size: 10px; color: var(--taupe);
+  letter-spacing: .05em; background: var(--white);
+}
+.hero-pill i { font-size: 12px; color: var(--gold); }
+
+/* ── PROGRESS ─────────────────────────────────────── */
+.prog-wrap {
+  background: var(--white);
+  padding: .7rem 1.5rem .55rem;
+  border-bottom: 1px solid var(--sand);
+  position: sticky; top: 0; z-index: 20;
+}
+.prog-track { height: 1px; background: var(--sand); margin-bottom: .5rem; }
+.prog-fill { height: 100%; background: var(--gold); transition: width .5s ease; width: 0%; }
+.prog-labels { display: flex; justify-content: space-between; }
+.prog-lbl { font-size: 9px; color: var(--mist); letter-spacing: .1em; text-transform: uppercase; }
+.prog-lbl.act { color: var(--gold); font-weight: 600; }
+.prog-lbl.done { color: var(--sand); }
+
+/* ── PANELS ───────────────────────────────────────── */
+.panel { display: none; padding: 1.75rem 1.5rem; animation: fi .35s ease; }
+.panel.on { display: block; }
+@keyframes fi { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.panel-eyebrow {
+  font-size: 9px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600; margin-bottom: .35rem;
+}
+.pt { font-family: var(--fs); font-size: 24px; font-weight: 500; margin-bottom: .3rem; line-height: 1.15; }
+.ps { font-size: 12px; color: var(--mist); margin-bottom: 1.4rem; line-height: 1.7; letter-spacing: .02em; }
+
+/* ── PHOTO SLOTS ──────────────────────────────────── */
+.pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: .8rem; }
+.slot {
+  aspect-ratio: 3/4; border: 1px dashed var(--sand); border-radius: 8px;
+  background: var(--pearl); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; cursor: pointer;
+  position: relative; overflow: hidden; transition: all .25s;
+}
+.slot:hover { border-color: var(--gold); background: var(--gold-pale); }
+.slot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 7px; display: none; }
+.slot-ico { font-size: 20px; color: var(--gold); opacity: .5; margin-bottom: 5px; pointer-events: none; }
+.slot-lbl { font-size: 8px; color: var(--mist); text-align: center; line-height: 1.45; letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
+.slot-ck { display: none; position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; background: var(--gold); border-radius: 50%; align-items: center; justify-content: center; }
+.slot.ok .slot-ck { display: flex; }
+.slot.ok .slot-ico, .slot.ok .slot-lbl { opacity: 0; }
+.photo-note { font-size: 10px; color: var(--mist); text-align: center; margin-bottom: 1.2rem; letter-spacing: .05em; }
+.err { font-size: 11px; color: var(--error); text-align: center; margin: .4rem 0; display: none; font-style: italic; }
+
+/* ── QUESTIONS ────────────────────────────────────── */
+.qb { margin-bottom: 1.15rem; }
+.ql {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--taupe); margin-bottom: .6rem; padding-left: 2px;
+}
+.opts { display: flex; flex-direction: column; gap: 5px; }
+.opt {
+  display: flex; align-items: center; gap: 11px; padding: 10px 13px;
+  border: 1px solid var(--sand); border-radius: 6px; cursor: pointer;
+  font-size: 12px; color: var(--mist); transition: all .2s; letter-spacing: .02em;
+  background: var(--white);
+}
+.opt:hover { border-color: var(--gold-lt); color: var(--taupe); background: var(--gold-pale); }
+.opt.s { border-color: var(--gold); background: var(--gold); color: var(--white); }
+.radio { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--sand); flex-shrink: 0; transition: all .2s; }
+.opt.s .radio { background: rgba(255,255,255,.4); border-color: rgba(255,255,255,.6); }
+
+/* ── BUTTONS ──────────────────────────────────────── */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 20px;
+  background: var(--black); color: var(--white);
+  font-family: var(--ff); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  border: none; border-radius: 6px; cursor: pointer;
+  transition: all .25s; margin-top: 1rem;
+}
+.btn:hover { background: var(--gold); }
+.btn-gold {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 20px;
+  background: var(--gold); color: var(--white);
+  font-family: var(--ff); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  border: none; border-radius: 6px; cursor: pointer;
+  transition: all .25s; margin-top: 1rem;
+}
+.btn-gold:hover { background: var(--gold-lt); }
+.btn2 {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 12px 20px; background: transparent;
+  color: var(--mist); font-family: var(--ff); font-size: 10px; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase;
+  border: 1px solid var(--sand); border-radius: 6px;
+  cursor: pointer; transition: all .2s; margin-top: 7px;
+}
+.btn2:hover { border-color: var(--gold-lt); color: var(--taupe); }
+
+/* ── SCANNING ─────────────────────────────────────── */
+.scan-wrap { text-align: center; padding: 3.5rem 1.5rem; }
+.ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 1px solid var(--sand); border-top-color: var(--gold);
+  animation: sp 1.2s linear infinite; margin: 0 auto 1.5rem;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+.scan-logo { font-family: var(--fs); font-size: 13px; letter-spacing: .4em; color: var(--gold); margin-bottom: 1rem; text-transform: uppercase; }
+.scan-title { font-family: var(--fs); font-size: 24px; font-weight: 500; margin-bottom: .3rem; }
+.scan-sub { font-size: 10px; color: var(--mist); letter-spacing: .12em; text-transform: uppercase; }
+.scan-list { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 9px; text-align: left; }
+.sl {
+  font-size: 11px; color: var(--mist); display: flex; align-items: center;
+  gap: 10px; letter-spacing: .03em; transition: all .3s;
+  padding: 8px 12px; border: 1px solid transparent; border-radius: 6px;
+}
+.sl.ok {
+  color: var(--taupe); font-weight: 500;
+  background: var(--gold-pale); border-color: var(--sand);
+}
+.sl.ok i { color: var(--gold); }
+
+/* ── RESULT HEADER ────────────────────────────────── */
+.rh {
+  background: var(--pearl); padding: 2rem 1.5rem 1.5rem;
+  border-bottom: 1px solid var(--sand); text-align: center;
+  position: relative; overflow: hidden;
+}
+.rh-bg { position: absolute; inset: 0; pointer-events: none; opacity: .04;
+  background-image: repeating-linear-gradient(
+    45deg, transparent, transparent 19px, var(--gold) 19px, var(--gold) 20px
+  );
+}
+.rh-inner { position: relative; z-index: 1; }
+.rph { display: flex; gap: 7px; justify-content: center; margin-bottom: 1.1rem; }
+.rph img {
+  width: 64px; height: 80px; border-radius: 6px; object-fit: cover;
+  border: 1.5px solid var(--gold); box-shadow: 0 2px 12px rgba(184,151,90,.15);
+}
+.skin-badge {
+  display: inline-block; padding: 5px 18px;
+  background: var(--gold); color: var(--white);
+  border-radius: 2px; font-size: 9px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; margin-bottom: .9rem;
+}
+.rtit { font-family: var(--fs); font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--mist); margin-bottom: .4rem; }
+.rsub { font-family: var(--fs); font-size: 22px; font-weight: 500; line-height: 1.25; margin-bottom: .65rem; }
+.rdesc { font-size: 12px; color: var(--mist); line-height: 1.8; letter-spacing: .02em; }
+
+/* ── DIAGNOSTICS GRID ─────────────────────────────── */
+.diag-section { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--sand); }
+.diag-eyebrow { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: .8rem; }
+.diag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.diag-card {
+  background: var(--pearl); border: 1px solid var(--sand); border-radius: 8px;
+  padding: .85rem; transition: all .2s;
+}
+.diag-icon { font-size: 17px; color: var(--gold); margin-bottom: 5px; }
+.diag-lbl { font-size: 8px; color: var(--mist); margin-bottom: 3px; letter-spacing: .12em; text-transform: uppercase; }
+.diag-val { font-size: 13px; font-weight: 600; color: var(--taupe); letter-spacing: .02em; }
+
+/* ── PLAN TABS ────────────────────────────────────── */
+.plan-section { padding: 1.5rem 1.5rem 0; }
+.plan-eyebrow { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: .85rem; }
+.plan-tabs { display: flex; gap: 7px; margin-bottom: 1rem; }
+.tab {
+  flex: 1; padding: 11px 8px;
+  border: 1px solid var(--sand); border-radius: 6px;
+  font-family: var(--ff); font-size: 9px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  cursor: pointer; transition: all .25s; color: var(--mist);
+  background: var(--pearl);
+}
+.tab:hover { border-color: var(--gold-lt); color: var(--taupe); }
+.tab.act { background: var(--black); color: var(--white); border-color: var(--black); }
+.plan-panel { display: none; }
+.plan-panel.on { display: block; }
+
+/* plan header card */
+.plan-header {
+  background: var(--pearl); border: 1px solid var(--sand);
+  border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
+  border-left: 3px solid var(--gold);
+}
+.plan-crown { font-size: 11px; color: var(--gold); margin-bottom: 4px; }
+.plan-title { font-family: var(--fs); font-size: 17px; font-weight: 500; margin-bottom: 3px; }
+.plan-sub { font-size: 11px; color: var(--mist); line-height: 1.6; letter-spacing: .02em; }
+
+/* product rows */
+.prod-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: .7rem 0; border-bottom: 1px solid var(--sand);
+}
+.prod-row:last-child { border-bottom: none; }
+.pnum {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold); color: var(--white);
+  font-size: 9px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.pinfo { flex: 1; min-width: 0; }
+.pname { font-size: 12px; font-weight: 600; letter-spacing: .03em; margin-bottom: 2px; color: var(--black); }
+.pwhy { font-size: 11px; color: var(--mist); line-height: 1.45; }
+.pprice { font-family: var(--fs); font-size: 16px; font-weight: 600; white-space: nowrap; flex-shrink: 0; color: var(--taupe); }
+
+/* totals */
+.total-box {
+  margin: 1rem 0; border: 1px solid var(--sand);
+  border-radius: 8px; overflow: hidden;
+}
+.total-box-top { padding: .85rem 1rem; background: var(--pearl); }
+.total-row { display: flex; justify-content: space-between; align-items: center; }
+.total-lbl { font-size: 11px; color: var(--mist); letter-spacing: .03em; }
+.total-strike { font-size: 11px; color: var(--mist); text-decoration: line-through; font-family: var(--fs); }
+.total-box-bottom { padding: .9rem 1rem; background: var(--white); border-top: 1px solid var(--sand); }
+.total-main { display: flex; justify-content: space-between; align-items: flex-end; }
+.total-inv-lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--taupe); margin-bottom: 4px; }
+.total-save { display: inline-block; padding: 3px 10px; background: var(--gold); color: var(--white); border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: .1em; }
+.total-amount { font-family: var(--fs); font-size: 28px; font-weight: 500; color: var(--black); }
+.total-perunit { font-size: 10px; color: var(--mist); margin-top: 2px; text-align: right; }
+
+/* duration */
+.dur-box {
+  margin: .5rem 0 1.5rem; background: var(--gold-pale);
+  border-radius: 8px; padding: .9rem 1rem;
+  display: flex; gap: 11px; align-items: flex-start;
+  border: 1px solid rgba(184,151,90,.25);
+}
+.dur-icon { font-size: 18px; color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+.dur-txt { font-size: 11px; color: var(--taupe); line-height: 1.75; }
+.dur-txt strong { color: var(--black); font-weight: 600; }
+
+/* ── INSIGHT ──────────────────────────────────────── */
+.insight-section {
+  margin: 0 1.5rem;
+  padding: 1rem; background: var(--pearl);
+  border: 1px solid var(--sand); border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+.insight-eye { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: .45rem; font-weight: 600; }
+.insight-txt { font-size: 12px; color: var(--mist); line-height: 1.85; letter-spacing: .02em; }
+
+/* ── SAVE BUTTON ──────────────────────────────────── */
+.save-section { padding: 0 1.5rem 1rem; }
+.save-btn {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; padding: 15px 20px;
+  background: var(--black); color: var(--white);
+  font-family: var(--ff); font-size: 10px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase;
+  border: none; border-radius: 6px; cursor: pointer; transition: all .25s;
+}
+.save-btn:hover { background: var(--gold); }
+.save-btn.saving { opacity: .45; cursor: not-allowed; }
+.save-btn.done { background: #2D6A4F; }
+.save-note { font-size: 10px; color: var(--mist); text-align: center; margin-top: .55rem; letter-spacing: .03em; line-height: 1.6; }
+
+/* ── CAPTURE CARD ─────────────────────────────────── */
+.capture-area { display: none; padding: .5rem 1.5rem 1rem; }
+.capture-card {
+  background: var(--white); border: 1px solid var(--sand); border-radius: 12px;
+  padding: 1.5rem; position: relative; overflow: hidden;
+}
+.capture-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-lt) 50%, var(--gold) 100%);
+}
+.cc-logo { font-family: var(--ff); font-size: 20px; font-weight: 700; letter-spacing: 8px; color: var(--black); margin-bottom: 2px; }
+.cc-sub { font-size: 8px; letter-spacing: .3em; color: var(--gold); text-transform: uppercase; margin-bottom: 1rem; font-weight: 500; }
+.cc-div { height: 1px; background: var(--sand); margin: .65rem 0; }
+.cc-photos { display: flex; gap: 5px; margin-bottom: .75rem; }
+.cc-photos img { width: 52px; height: 65px; border-radius: 5px; object-fit: cover; border: 1px solid var(--sand); }
+.cc-skin-lbl { font-size: 8px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+.cc-type { font-family: var(--fs); font-size: 17px; font-weight: 600; margin-bottom: .4rem; color: var(--black); }
+.cc-desc { font-size: 10px; color: var(--mist); line-height: 1.65; margin-bottom: .7rem; }
+.cc-prods { display: flex; flex-direction: column; gap: 4px; margin-bottom: .7rem; }
+.cc-prod { display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding: 5px 0; border-bottom: 1px solid var(--pearl); }
+.cc-prod:last-child { border-bottom: none; }
+.cc-prod-name { color: var(--black); font-weight: 500; }
+.cc-prod-price { font-family: var(--fs); font-size: 13px; color: var(--mist); }
+.cc-total-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: .5rem; border-top: 1px solid var(--sand); }
+.cc-total-lbl { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--taupe); }
+.cc-saving { display: inline-block; font-size: 8px; color: var(--white); background: var(--gold); padding: 2px 9px; border-radius: 2px; letter-spacing: .1em; margin-top: 4px; font-weight: 600; }
+.cc-total-val { font-family: var(--fs); font-size: 24px; font-weight: 600; color: var(--black); }
+.cc-perday { font-size: 9px; color: var(--mist); text-align: right; margin-top: 2px; }
+.cc-footer { font-size: 8px; color: var(--mist); text-align: center; letter-spacing: .12em; text-transform: uppercase; margin-top: .8rem; padding-top: .65rem; border-top: 1px solid var(--pearl); }
+.capture-hint { font-size: 11px; color: var(--mist); text-align: center; margin-top: .65rem; line-height: 1.65; font-style: italic; }
+
+/* ── RESTART & FOOTER ─────────────────────────────── */
+.restart-wrap { padding: .5rem 1.5rem 1.5rem; }
+.restart {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 11px; background: transparent; color: var(--mist);
+  font-family: var(--ff); font-size: 9px; font-weight: 600;
+  letter-spacing: .15em; text-transform: uppercase;
+  border: 1px solid var(--sand); border-radius: 6px; cursor: pointer; transition: all .2s;
+}
+.restart:hover { border-color: var(--gold-lt); color: var(--taupe); }
+.riman-footer {
+  text-align: center; padding: 1.5rem 1.5rem 2rem;
+  border-top: 1px solid var(--sand); background: var(--pearl);
+}
+.footer-wordmark { font-family: var(--ff); font-size: 12px; font-weight: 700; letter-spacing: 6px; color: var(--mist); margin-bottom: .5rem; }
+.footer-txt { font-size: 9px; color: var(--mist); letter-spacing: .06em; line-height: 1.7; }
+.footer-divider { display: flex; align-items: center; gap: 10px; margin: .75rem auto; max-width: 180px; }
+.footer-divider-line { flex: 1; height: 1px; background: var(--sand); }
+.footer-divider-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg-lines"></div>
+    <div class="hero-inner">
+      <div class="logo-wrap">
+        <img src="https://images.squarespace-cdn.com/content/v1/68fb44859191ba6a66edfd78/317541b2-c2b7-493d-a19b-11da2874f101/RimanLogo.png?format=400w"
+             alt="RIMAN Logo" class="logo-img"
+             onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
+        <div id="logoFallback" style="display:none;font-family:'Montserrat',sans-serif;font-size:30px;font-weight:700;letter-spacing:10px;color:#0D0D0D">RIMAN</div>
+        <div class="logo-sub">Korean Dermocosmetics</div>
+      </div>
+      <div class="hero-divider">
+        <div class="hero-divider-line"></div>
+        <div class="hero-divider-dot"></div>
+        <div class="hero-divider-line"></div>
+      </div>
+      <h1>Diagnóstico de piel<br>con <em>análisis IA</em></h1>
+      <p>Descubre exactamente qué necesita tu piel y recibe tu rutina Riman personalizada en menos de 3 minutos.</p>
+      <div class="hero-pills">
+        <div class="hero-pill"><i class="ti ti-camera"></i> 3 fotos</div>
+        <div class="hero-pill"><i class="ti ti-list-check"></i> 5 preguntas</div>
+        <div class="hero-pill"><i class="ti ti-sparkles"></i> 2 rutinas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="prog-wrap">
+    <div class="prog-track"><div class="prog-fill" id="pf"></div></div>
+    <div class="prog-labels">
+      <span class="prog-lbl act" id="ps0">Fotos</span>
+      <span class="prog-lbl" id="ps1">Perfil</span>
+      <span class="prog-lbl" id="ps2">Análisis</span>
+      <span class="prog-lbl" id="ps3">Resultado</span>
+    </div>
+  </div>
+
+  <!-- PANEL 1: FOTOS -->
+  <div class="panel on" id="p0">
+    <div class="panel-eyebrow">Paso 01 de 03</div>
+    <div class="pt">Captura tu piel</div>
+    <div class="ps">Sube exactamente 3 fotos para un diagnóstico preciso. La IA analiza textura, poros, tono e hidratación en cada ángulo.</div>
+    <div class="pgrid">
+      <div class="slot" id="sl0" onclick="document.getElementById('f0').click()">
+        <input type="file" id="f0" accept="image/*" onchange="loadPic(0,this)">
+        <i class="ti ti-camera slot-ico"></i>
+        <div class="slot-lbl">Frente<br>luz natural</div>
+        <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+        <img id="pi0" alt="">
+      </div>
+      <div class="slot" id="sl1" onclick="document.getElementById('f1').click()">
+        <input type="file" id="f1" accept="image/*" onchange="loadPic(1,this)">
+        <i class="ti ti-camera slot-ico"></i>
+        <div class="slot-lbl">Perfil<br>derecho</div>
+        <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+        <img id="pi1" alt="">
+      </div>
+      <div class="slot" id="sl2" onclick="document.getElementById('f2').click()">
+        <input type="file" id="f2" accept="image/*" onchange="loadPic(2,this)">
+        <i class="ti ti-camera slot-ico"></i>
+        <div class="slot-lbl">Zona T<br>acercada</div>
+        <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+        <img id="pi2" alt="">
+      </div>
+    </div>
+    <div class="photo-note">Sin maquillaje &nbsp;·&nbsp; buena luz &nbsp;·&nbsp; fondo neutro</div>
+    <div class="err" id="perr">Por favor sube las 3 fotos para continuar</div>
+    <button class="btn" onclick="tryNext(1)">Continuar <i class="ti ti-arrow-right"></i></button>
+  </div>
+
+  <!-- PANEL 2: PREGUNTAS -->
+  <div class="panel" id="p1">
+    <div class="panel-eyebrow">Paso 02 de 03</div>
+    <div class="pt">Tu perfil de piel</div>
+    <div class="ps">5 preguntas que calibran el diagnóstico. La IA cruza estas respuestas con el análisis visual de tus fotos.</div>
+    <div class="qb">
+      <div class="ql">01 — ¿Cómo sientes tu piel al mediodía?</div>
+      <div class="opts" id="q0">
+        <div class="opt" onclick="pick('q0',0)"><div class="radio"></div>Brillante en toda la cara</div>
+        <div class="opt" onclick="pick('q0',1)"><div class="radio"></div>Brillante en zona T, mejillas normales</div>
+        <div class="opt" onclick="pick('q0',2)"><div class="radio"></div>Tirante, seca o con descamación</div>
+        <div class="opt" onclick="pick('q0',3)"><div class="radio"></div>Cómoda y equilibrada</div>
+      </div>
+    </div>
+    <div class="qb">
+      <div class="ql">02 — ¿Tu piel se enrojece o irrita fácilmente?</div>
+      <div class="opts" id="q1">
+        <div class="opt" onclick="pick('q1',0)"><div class="radio"></div>Casi nunca</div>
+        <div class="opt" onclick="pick('q1',1)"><div class="radio"></div>A veces con calor o productos nuevos</div>
+        <div class="opt" onclick="pick('q1',2)"><div class="radio"></div>Sí, con frecuencia y de forma visible</div>
+        <div class="opt" onclick="pick('q1',3)"><div class="radio"></div>Sí, con rosácea, brotes o dermatitis</div>
+      </div>
+    </div>
+    <div class="qb">
+      <div class="ql">03 — ¿Qué ves al mirarte de cerca?</div>
+      <div class="opts" id="q2">
+        <div class="opt" onclick="pick('q2',0)"><div class="radio"></div>Piel uniforme, poro fino</div>
+        <div class="opt" onclick="pick('q2',1)"><div class="radio"></div>Poros dilatados o puntos negros</div>
+        <div class="opt" onclick="pick('q2',2)"><div class="radio"></div>Líneas finas o pérdida de firmeza</div>
+        <div class="opt" onclick="pick('q2',3)"><div class="radio"></div>Manchas oscuras o tono irregular</div>
+      </div>
+    </div>
+    <div class="qb">
+      <div class="ql">04 — ¿Tienes acné o lesiones activas?</div>
+      <div class="opts" id="q3">
+        <div class="opt" onclick="pick('q3',0)"><div class="radio"></div>No, mi piel está limpia</div>
+        <div class="opt" onclick="pick('q3',1)"><div class="radio"></div>Ocasional, hormonal</div>
+        <div class="opt" onclick="pick('q3',2)"><div class="radio"></div>Sí, frecuente en mejillas o mentón</div>
+        <div class="opt" onclick="pick('q3',3)"><div class="radio"></div>Sí, acné inflamatorio activo</div>
+      </div>
+    </div>
+    <div class="qb">
+      <div class="ql">05 — ¿Cuál es tu prioridad de piel hoy?</div>
+      <div class="opts" id="q4">
+        <div class="opt" onclick="pick('q4',0)"><div class="radio"></div>Hidratar y calmar — mi piel pide agua</div>
+        <div class="opt" onclick="pick('q4',1)"><div class="radio"></div>Antiedad — quiero firmeza y luminosidad</div>
+        <div class="opt" onclick="pick('q4',2)"><div class="radio"></div>Controlar grasa y poros</div>
+        <div class="opt" onclick="pick('q4',3)"><div class="radio"></div>Unificar tono y tratar manchas</div>
+      </div>
+    </div>
+    <div class="err" id="qerr">Responde las 5 preguntas para continuar</div>
+    <button class="btn" onclick="tryAnalyze()">Analizar mi piel <i class="ti ti-sparkles"></i></button>
+    <button class="btn2" onclick="goTo(0)"><i class="ti ti-arrow-left"></i> Volver a fotos</button>
+  </div>
+
+  <!-- PANEL 3: SCAN -->
+  <div class="panel" id="p2">
+    <div class="scan-wrap">
+      <div class="ring"></div>
+      <div class="scan-logo">Riman IA</div>
+      <div class="scan-title">Analizando tu piel…</div>
+      <div class="scan-sub">Motor dermocosmetológico · Procesando</div>
+      <div class="scan-list">
+        <div class="sl" id="s0"><i class="ti ti-circle"></i>&ensp;Procesando 3 fotos — textura y poros</div>
+        <div class="sl" id="s1"><i class="ti ti-circle"></i>&ensp;Evaluando hidratación y barrera cutánea</div>
+        <div class="sl" id="s2"><i class="ti ti-circle"></i>&ensp;Detectando signos de envejecimiento</div>
+        <div class="sl" id="s3"><i class="ti ti-circle"></i>&ensp;Identificando reactividad e inflamación</div>
+        <div class="sl" id="s4"><i class="ti ti-circle"></i>&ensp;Cruzando con perfil de respuestas</div>
+        <div class="sl" id="s5"><i class="ti ti-circle"></i>&ensp;Construyendo 2 rutinas personalizadas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 4: RESULTADO -->
+  <div class="panel" id="p3">
+
+    <div class="rh">
+      <div class="rh-bg"></div>
+      <div class="rh-inner">
+        <div class="rph" id="rph"></div>
+        <div class="skin-badge" id="rbadge"></div>
+        <div class="rtit">Diagnóstico personalizado · Riman IA</div>
+        <div class="rsub" id="rsub"></div>
+        <div class="rdesc" id="rdesc"></div>
+      </div>
+    </div>
+
+    <div class="diag-section">
+      <div class="diag-eyebrow">Análisis de tu piel</div>
+      <div class="diag-grid" id="diagGrid"></div>
+    </div>
+
+    <div class="plan-section">
+      <div class="plan-eyebrow">Tu rutina personalizada</div>
+      <div class="plan-tabs">
+        <div class="tab act" id="tab0" onclick="switchTab(0)">
+          <i class="ti ti-crown" style="font-size:11px;margin-right:4px"></i>Ritual completo
+        </div>
+        <div class="tab" id="tab1" onclick="switchTab(1)">
+          <i class="ti ti-leaf" style="font-size:11px;margin-right:4px"></i>Inicio esencial
+        </div>
+      </div>
+
+      <div class="plan-panel on" id="pp0">
+        <div class="plan-header">
+          <div class="plan-crown"><i class="ti ti-crown"></i></div>
+          <div class="plan-title">Ritual completo Riman</div>
+          <div class="plan-sub">El protocolo dermocosmetológico completo. Resultados visibles desde la semana 3, transformación profunda al mes 3.</div>
+        </div>
+        <div id="pl0"></div>
+        <div class="total-box" id="tb0"></div>
+        <div class="dur-box"><i class="ti ti-calendar-stats dur-icon"></i><div class="dur-txt" id="dur0"></div></div>
+      </div>
+
+      <div class="plan-panel" id="pp1">
+        <div class="plan-header">
+          <div class="plan-crown"><i class="ti ti-leaf"></i></div>
+          <div class="plan-title">Inicio esencial Riman</div>
+          <div class="plan-sub">Los productos clave para comenzar tu transformación. Ideal para quienes inician su ritual Riman.</div>
+        </div>
+        <div id="pl1"></div>
+        <div class="total-box" id="tb1"></div>
+        <div class="dur-box"><i class="ti ti-calendar-stats dur-icon"></i><div class="dur-txt" id="dur1"></div></div>
+      </div>
+    </div>
+
+    <div class="insight-section">
+      <div class="insight-eye">Por qué estas fórmulas para tu piel</div>
+      <div class="insight-txt" id="insight"></div>
+    </div>
+
+    <div class="save-section">
+      <button class="save-btn" id="saveBtn" onclick="saveResult()">
+        <i class="ti ti-download"></i> Guardar mi diagnóstico
+      </button>
+      <div class="save-note" id="saveNote">Genera una tarjeta con tu rutina lista para guardar y compartir</div>
+    </div>
+
+    <div class="capture-area" id="captureArea">
+      <div class="capture-card" id="captureCard">
+        <div class="cc-logo">RIMAN</div>
+        <div class="cc-sub">Korean Dermocosmetics · Diagnóstico IA</div>
+        <div class="cc-div"></div>
+        <div class="cc-photos" id="ccPhotos"></div>
+        <div class="cc-skin-lbl">Tipo de piel detectado</div>
+        <div class="cc-type" id="ccType"></div>
+        <div class="cc-desc" id="ccDesc"></div>
+        <div class="cc-div"></div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#B8975A;margin-bottom:.5rem">Rutina recomendada</div>
+        <div class="cc-prods" id="ccProds"></div>
+        <div class="cc-total-row">
+          <div><div class="cc-total-lbl">Tu inversión</div><div class="cc-saving" id="ccSaving"></div></div>
+          <div style="text-align:right"><div class="cc-total-val" id="ccTotal"></div><div class="cc-perday" id="ccPerDay"></div></div>
+        </div>
+        <div class="cc-footer">riman.com &nbsp;·&nbsp; Diagnóstico personalizado &nbsp;·&nbsp; 3 meses de ritual</div>
+      </div>
+      <div class="capture-hint">Tarjeta lista — mantén presionado o usa el botón compartir de tu dispositivo para guardarla.</div>
+    </div>
+
+    <div class="restart-wrap">
+      <button class="restart" onclick="restart()"><i class="ti ti-refresh"></i> Hacer el test nuevamente</button>
+    </div>
+
+    <div class="riman-footer">
+      <div class="footer-divider">
+        <div class="footer-divider-line"></div>
+        <div class="footer-divider-dot"></div>
+        <div class="footer-divider-line"></div>
+      </div>
+      <div class="footer-wordmark">RIMAN</div>
+      <div class="footer-txt">Korean Dermocosmetics<br>Este diagnóstico es orientativo y no sustituye una consulta dermatológica personalizada.</div>
+    </div>
+
+  </div><!-- /panel 4 -->
+</div><!-- /app -->
+
+<script>
+const P = {
+  lim: { n: 'Aceite Facial Botánico',      p: 40615,  w: 'Limpieza por afinidad · respeta la barrera lipídica' },
+  bif: { n: 'Aceite Bifásico Reparador',   p: 44000,  w: 'Niacinamida + vitamina C estable + rosa mosqueta' },
+  gel: { n: 'Gel Calmante Hidratante',     p: 44000,  w: '5 hialurónicos · beta-glucano · oro coloidal' },
+  boo: { n: 'Booseboo — Booster + Sérum', p: 111685, w: 'NMN · triple péptido · GABA · microbioma' },
+  cre: { n: 'Crema Restauradora',          p: 74460,  w: 'Triple colágeno · ergotioneína · karité' },
+  blq: { n: 'Bloqueador Hidratante',       p: 32715,  w: '7 hialurónicos · fotoestabilizador premium' },
+  bal: { n: 'ICD Multi Stick Balm',        p: 32715,  w: 'Bálsamo SOS · cuidado puntual · labios' }
+};
+let photos=[null,null,null], ans={}, cur=0, lastFullKeys=[], lastSkinType='', lastDesc='';
+
+function loadPic(i,inp){
+  if(!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    photos[i]=e.target.result;
+    const img=document.getElementById('pi'+i);
+    img.src=e.target.result; img.style.display='block';
+    document.getElementById('sl'+i).classList.add('ok');
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function pick(qid,idx){
+  document.querySelectorAll('#'+qid+' .opt').forEach((o,i)=>o.classList.toggle('s',i===idx));
+  ans[qid]=idx;
+}
+function allPics(){ return photos.every(p=>p!==null); }
+function allQs(){ return ['q0','q1','q2','q3','q4'].every(q=>ans[q]!==undefined); }
+function tryNext(n){
+  if(n===1&&!allPics()){ document.getElementById('perr').style.display='block'; return; }
+  document.getElementById('perr').style.display='none'; goTo(n);
+}
+function tryAnalyze(){
+  if(!allQs()){ document.getElementById('qerr').style.display='block'; return; }
+  document.getElementById('qerr').style.display='none'; goTo(2); runScan();
+}
+function goTo(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p'+n).classList.add('on');
+  cur=n; updateProg();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateProg(){
+  const pct=[0,33,66,100][cur];
+  document.getElementById('pf').style.width=pct+'%';
+  ['Fotos','Perfil','Análisis','Resultado'].forEach((l,i)=>{
+    const el=document.getElementById('ps'+i);
+    el.className='prog-lbl'+(i===cur?' act':i<cur?' done':'');
+  });
+}
+function runScan(){
+  [0,1,2,3,4,5].forEach((i,idx)=>{
+    setTimeout(()=>{
+      const el=document.getElementById('s'+i);
+      el.classList.add('ok');
+      el.querySelector('i').className='ti ti-check';
+    }, 600+idx*750);
+  });
+  setTimeout(()=>buildResult(), 600+5*750+900);
+}
+function buildResult(){
+  const q0=ans.q0||0, q1=ans.q1||0, q2=ans.q2||0, q3=ans.q3||0, q4=ans.q4||0;
+  let skinType,subline,desc,fullKeys,essKeys,insight,diagItems;
+  if(q0===0){
+    skinType='Piel grasa · sebo elevado';
+    subline='Barrera activa, producción lipídica excesiva';
+    desc='La IA detectó producción excesiva de sebo en frente, nariz y mentón con poros visibles y tendencia a oclusión folicular. La barrera está activa pero sobrecargada lipídicamente.';
+    fullKeys=['lim','gel','boo','cre','blq']; essKeys=['lim','gel','blq'];
+    diagItems=[{ic:'ti-droplets',l:'Hidratación',v:'Baja / sebo excesivo'},{ic:'ti-wind',l:'Barrera',v:'Sobrecargada'},{ic:'ti-circle-dot',l:'Poros',v:'Dilatados / activos'},{ic:'ti-sun',l:'Luminosidad',v:'Opacidad grasa'}];
+    insight='El Gel Calmante con beta-glucano regula el sebo sin resecar. El Booseboo con NMN activa el metabolismo celular sin peso lipídico. El Bloqueador de 7 hialurónicos protege sin obstruir poros.';
+  } else if(q0===1){
+    skinType='Piel mixta · zona T activa';
+    subline='Desequilibrio entre zona T y mejillas';
+    desc='La IA detectó desequilibrio entre zona T brillante y mejillas deshidratadas. Patrón clásico que requiere equilibrio sin sobrecargar ni resecar ninguna zona.';
+    fullKeys=['lim','gel','boo','cre','blq']; essKeys=['lim','gel','blq'];
+    diagItems=[{ic:'ti-droplets',l:'Hidratación',v:'Baja en mejillas'},{ic:'ti-wind',l:'Barrera',v:'Desequilibrada'},{ic:'ti-circle-dot',l:'Zona T',v:'Poros abiertos'},{ic:'ti-sun',l:'Luminosidad',v:'Irregular'}];
+    insight='El Gel con 5 hialurónicos hidrata las mejillas sin cargar la T. El Booseboo trabaja la barrera dérmide sin residuo lipídico en zonas grasas. Equilibrio real en un solo ritual coreano.';
+  } else if(q0===2){
+    skinType='Piel seca · barrera debilitada';
+    subline='Deshidratación profunda, barrera comprometida';
+    desc='La IA detectó deshidratación profunda, descamación incipiente y barrera lipídica comprometida. Sin refuerzo activo, los activos no penetran correctamente en las capas dérmicas.';
+    fullKeys=['lim','bif','gel','boo','cre','blq']; essKeys=['lim','gel','cre'];
+    diagItems=[{ic:'ti-droplets',l:'Hidratación',v:'Muy baja'},{ic:'ti-wind',l:'Barrera',v:'Comprometida'},{ic:'ti-circle-dot',l:'Textura',v:'Descamación / tirantez'},{ic:'ti-sun',l:'Luminosidad',v:'Apagada'}];
+    insight='El Bifásico con rosa mosqueta + niacinamida repara la barrera lipídica. La Crema con triple colágeno y karité sella en profundidad. Los 5 hialurónicos del Gel hidratan a todos los niveles.';
+  } else {
+    skinType='Piel normal · potencial premium';
+    subline='Equilibrada — lista para potenciarse';
+    desc='La IA detectó piel equilibrada con buena tolerancia y ausencia de condiciones activas. La oportunidad es maximizar luminosidad, firmeza y longevidad celular antes de que los signos aparezcan.';
+    fullKeys=['lim','gel','boo','cre','blq']; essKeys=['lim','boo','blq'];
+    diagItems=[{ic:'ti-droplets',l:'Hidratación',v:'Adecuada'},{ic:'ti-wind',l:'Barrera',v:'Funcional'},{ic:'ti-circle-dot',l:'Textura',v:'Uniforme'},{ic:'ti-sun',l:'Luminosidad',v:'Optimizable'}];
+    insight='El Booseboo con NMN activa la energía mitocondrial antes de que los signos sean visibles. Protocolo de prevención premium que trabaja a nivel celular profundo.';
+  }
+  if(q1>=2&&!fullKeys.includes('bif')) fullKeys.splice(1,0,'bif');
+  if(q1===3&&!fullKeys.includes('bal')) fullKeys.push('bal');
+  if(q2===3&&!fullKeys.includes('bif')) fullKeys.splice(1,0,'bif');
+  if(q3>=2&&!essKeys.includes('gel')) essKeys.splice(1,0,'gel');
+  if(q4===1&&!fullKeys.includes('cre')) fullKeys.push('cre');
+  fullKeys=[...new Set(fullKeys)]; essKeys=[...new Set(essKeys)];
+  lastFullKeys=fullKeys; lastSkinType=skinType; lastDesc=desc;
+
+  document.getElementById('rbadge').textContent=skinType;
+  document.getElementById('rsub').textContent=subline;
+  document.getElementById('rdesc').textContent=desc;
+  document.getElementById('insight').textContent=insight;
+
+  const rph=document.getElementById('rph'); rph.innerHTML='';
+  photos.forEach(ph=>{if(ph){const im=document.createElement('img');im.src=ph;im.alt='';rph.appendChild(im);}});
+
+  const dg=document.getElementById('diagGrid'); dg.innerHTML='';
+  diagItems.forEach(d=>{
+    dg.innerHTML+=`<div class="diag-card"><div class="diag-icon"><i class="ti ${d.ic}"></i></div><div class="diag-lbl">${d.l}</div><div class="diag-val">${d.v}</div></div>`;
+  });
+
+  renderPlan('pl0','tb0','dur0',fullKeys);
+  renderPlan('pl1','tb1','dur1',essKeys);
+  goTo(3);
+}
+function renderPlan(listId,totId,durId,keys){
+  const list=document.getElementById(listId); list.innerHTML=''; let total=0;
+  keys.forEach((k,i)=>{
+    const pr=P[k]; total+=pr.p;
+    list.innerHTML+=`<div class="prod-row"><div class="pnum">${i+1}</div><div class="pinfo"><div class="pname">${pr.n}</div><div class="pwhy">${pr.w}</div></div><div class="pprice">$${pr.p.toLocaleString('es-CL')}</div></div>`;
+  });
+  const mktRef=Math.round(total*2.2), ahorro=mktRef-total, pct=Math.round((ahorro/mktRef)*100);
+  const diario=Math.round(total/90), mensual=Math.round(total/3);
+  document.getElementById(totId).innerHTML=`
+    <div class="total-box-top">
+      <div class="total-row">
+        <span class="total-lbl">Equivalente marcas internacionales (3 meses)</span>
+        <span class="total-strike">$${mktRef.toLocaleString('es-CL')}</span>
+      </div>
+    </div>
+    <div class="total-box-bottom">
+      <div class="total-main">
+        <div>
+          <div class="total-inv-lbl">Tu inversión</div>
+          <div class="total-save">Ahorro del ${pct}%</div>
+        </div>
+        <div style="text-align:right">
+          <div class="total-amount">$${total.toLocaleString('es-CL')}</div>
+          <div class="total-perunit">$${mensual.toLocaleString('es-CL')}/mes &nbsp;·&nbsp; $${diario.toLocaleString('es-CL')}/día</div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById(durId).innerHTML=`<strong>Duración estimada: 3 meses de ritual completo.</strong> Usados diariamente como indica el protocolo Riman, estos productos duran aproximadamente 90 días — lo que equivale a solo <strong>$${diario.toLocaleString('es-CL')} por día</strong>, menos que un café. Una consulta dermatológica en Chile cuesta entre $40.000 y $80.000 <em>sin incluir productos</em>. Con Riman, inviertes una vez y tienes dermocosmetología coreana de nivel clínico durante todo el trimestre.`;
+}
+function switchTab(n){
+  [0,1].forEach(i=>{
+    document.getElementById('tab'+i).classList.toggle('act',i===n);
+    document.getElementById('pp'+i).classList.toggle('on',i===n);
+  });
+}
+function saveResult(){
+  const btn=document.getElementById('saveBtn');
+  btn.classList.add('saving');
+  btn.innerHTML='<i class="ti ti-loader"></i> Preparando tarjeta…';
+
+  const ccPhotos=document.getElementById('ccPhotos'); ccPhotos.innerHTML='';
+  photos.forEach(ph=>{if(ph){const im=document.createElement('img');im.src=ph;im.alt='';ccPhotos.appendChild(im);}});
+  document.getElementById('ccType').textContent=lastSkinType;
+  document.getElementById('ccDesc').textContent=lastDesc;
+
+  const ccProds=document.getElementById('ccProds'); ccProds.innerHTML=''; let tot=0;
+  lastFullKeys.forEach(k=>{
+    const pr=P[k]; tot+=pr.p;
+    ccProds.innerHTML+=`<div class="cc-prod"><span class="cc-prod-name">${pr.n}</span><span class="cc-prod-price">$${pr.p.toLocaleString('es-CL')}</span></div>`;
+  });
+  const mkt=Math.round(tot*2.2), pct=Math.round(((mkt-tot)/mkt)*100), dia=Math.round(tot/90);
+  document.getElementById('ccTotal').textContent='$'+tot.toLocaleString('es-CL');
+  document.getElementById('ccSaving').textContent='Ahorro del '+pct+'% vs marcas internacionales';
+  document.getElementById('ccPerDay').textContent='$'+dia.toLocaleString('es-CL')+' por día · 3 meses de ritual';
+
+  setTimeout(()=>{
+    document.getElementById('captureArea').style.display='block';
+    btn.classList.remove('saving');
+    btn.classList.add('done');
+    btn.innerHTML='<i class="ti ti-check"></i> Tarjeta lista — toma una captura';
+    document.getElementById('saveNote').textContent='Mantén presionado la tarjeta o usa el botón compartir de tu dispositivo';
+  }, 900);
+}
+function restart(){
+  photos=[null,null,null]; ans={}; lastFullKeys=[]; lastSkinType=''; lastDesc='';
+  [0,1,2].forEach(i=>{
+    document.getElementById('pi'+i).style.display='none';
+    document.getElementById('sl'+i).classList.remove('ok');
+    document.getElementById('f'+i).value='';
+  });
+  ['q0','q1','q2','q3','q4'].forEach(q=>{
+    document.querySelectorAll('#'+q+' .opt').forEach(o=>o.classList.remove('s'));
+    delete ans[q];
+  });
+  [0,1,2,3,4,5].forEach(i=>{
+    const el=document.getElementById('s'+i);
+    if(el){ el.classList.remove('ok'); el.querySelector('i').className='ti ti-circle'; }
+  });
+  const btn=document.getElementById('saveBtn');
+  btn.innerHTML='<i class="ti ti-download"></i> Guardar mi diagnóstico';
+  btn.className='save-btn';
+  document.getElementById('saveNote').textContent='Genera una tarjeta con tu rutina personalizada lista para guardar y compartir';
+  document.getElementById('captureArea').style.display='none';
+  goTo(0);
+}
+</script>
+</body>
+</html>
