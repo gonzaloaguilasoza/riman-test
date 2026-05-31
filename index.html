@@ -404,19 +404,19 @@ body {
   <div class="pdesc">Sube exactamente 3 fotos. La IA analiza textura, poros, tono e hidratación en cada ángulo para un diagnóstico preciso.</div>
   <div class="pgrid">
     <div class="slot" id="sl0" onclick="document.getElementById('f0').click()">
-      <input type="file" id="f0" accept="image/*" capture="environment" onchange="loadPic(0,this)">
+      <input type="file" id="f0" accept="image/*" onchange="loadPic(0,this)">
       <i class="ti ti-camera slot-ico"></i><div class="slot-lbl">Frente<br>luz natural</div>
       <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
       <img id="pi0" alt="">
     </div>
     <div class="slot" id="sl1" onclick="document.getElementById('f1').click()">
-      <input type="file" id="f1" accept="image/*" capture="environment" onchange="loadPic(1,this)">
+      <input type="file" id="f1" accept="image/*" onchange="loadPic(1,this)">
       <i class="ti ti-camera slot-ico"></i><div class="slot-lbl">Perfil<br>derecho</div>
       <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
       <img id="pi1" alt="">
     </div>
     <div class="slot" id="sl2" onclick="document.getElementById('f2').click()">
-      <input type="file" id="f2" accept="image/*" capture="environment" onchange="loadPic(2,this)">
+      <input type="file" id="f2" accept="image/*" onchange="loadPic(2,this)">
       <i class="ti ti-camera slot-ico"></i><div class="slot-lbl">Zona T<br>acercada</div>
       <div class="slot-ck"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
       <img id="pi2" alt="">
@@ -599,15 +599,32 @@ const P={
 let photos=[null,null,null],ans={},cur=0,lastKeys=[],lastSkinType='',lastDesc='';
 
 function loadPic(i,inp){
-  if(!inp.files[0])return;
+  const file=inp.files&&inp.files[0];
+  if(!file)return;
   const r=new FileReader();
-  r.onload=e=>{
-    photos[i]=e.target.result;
+  r.onload=function(e){
+    const data=e.target.result;
+    photos[i]=data;
     const img=document.getElementById('pi'+i);
-    img.src=e.target.result;img.style.display='block';
-    document.getElementById('sl'+i).classList.add('ok');
+    img.onload=function(){
+      img.style.display='block';
+      document.getElementById('sl'+i).classList.add('ok');
+    };
+    img.onerror=function(){
+      img.style.display='block';
+      document.getElementById('sl'+i).classList.add('ok');
+    };
+    img.src=data;
+    /* fallback: if onload already fired (cached) */
+    if(img.complete&&img.naturalWidth){
+      img.style.display='block';
+      document.getElementById('sl'+i).classList.add('ok');
+    }
   };
-  r.readAsDataURL(inp.files[0]);
+  r.onerror=function(){console.warn('FileReader error on slot '+i);};
+  r.readAsDataURL(file);
+  /* Reset input so same file can be reselected on iOS */
+  inp.value='';
 }
 function pick(qid,idx){
   document.querySelectorAll('#'+qid+' .opt').forEach((o,i)=>o.classList.toggle('s',i===idx));
