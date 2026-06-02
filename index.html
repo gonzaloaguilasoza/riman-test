@@ -128,35 +128,25 @@ body {
 /* ── PHOTO GRID ───────────────────────────────────── */
 .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: .7rem; }
 .slot {
-  aspect-ratio: 3/4; border: 1px dashed var(--sand); border-radius: 10px;
-  background: var(--pearl); display: block;
-  cursor: pointer; position: relative; overflow: hidden;
-  -webkit-user-select: none; user-select: none;
+  aspect-ratio: 3/4;
+  border: 1.5px dashed var(--sand);
+  border-radius: 10px;
+  background: var(--pearl);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
 }
-/* The file input covers the whole slot — tap anywhere to open camera */
-.slot input[type="file"] {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  opacity: 0; cursor: pointer;
-  font-size: 16px; /* prevent iOS zoom */
-  z-index: 10;
-}
-/* Centered content behind the input */
+.slot.ok { border-style: solid; border-color: var(--gold); }
 .slot-inner {
-  position: absolute; inset: 0;
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   pointer-events: none;
+  z-index: 1;
 }
-/* Preview image — shown after photo taken, on top of input */
-.slot img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover; display: none;
-  z-index: 20; /* above input so it shows */
-  pointer-events: none;
-}
-.slot.ok { border-style: solid; border-color: var(--gold); }
 .slot-ico { font-size: 22px; color: var(--gold); opacity: .5; margin-bottom: 5px; }
 .slot-lbl { font-size: 11px; color: var(--mist); text-align: center; line-height: 1.45; letter-spacing: .07em; text-transform: uppercase; pointer-events: none; }
 .slot-ck { display: none; position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; background: var(--gold); border-radius: 50%; align-items: center; justify-content: center; }
@@ -438,28 +428,34 @@ body {
 
   <div class="pgrid">
     <div class="slot" id="sl0">
-      <input type="file" id="f0" accept="image/*" onchange="loadPic(0,this)">
-      <div class="slot-inner" id="inner0">
+      <input type="file" accept="image/*" id="f0"
+        onchange="loadPic(0,this)"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;z-index:9">
+      <div id="inner0" class="slot-inner">
         <i class="ti ti-camera slot-ico"></i>
-        <div class="slot-lbl">Foto de<br>frente</div>
+        <div class="slot-lbl">Foto de frente</div>
       </div>
-      <img id="pi0" alt="">
+      <img id="pi0" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;z-index:8;pointer-events:none">
     </div>
     <div class="slot" id="sl1">
-      <input type="file" id="f1" accept="image/*" onchange="loadPic(1,this)">
-      <div class="slot-inner" id="inner1">
+      <input type="file" accept="image/*" id="f1"
+        onchange="loadPic(1,this)"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;z-index:9">
+      <div id="inner1" class="slot-inner">
         <i class="ti ti-camera slot-ico"></i>
-        <div class="slot-lbl">Perfil<br>derecho</div>
+        <div class="slot-lbl">Perfil derecho</div>
       </div>
-      <img id="pi1" alt="">
+      <img id="pi1" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;z-index:8;pointer-events:none">
     </div>
     <div class="slot" id="sl2">
-      <input type="file" id="f2" accept="image/*" onchange="loadPic(2,this)">
-      <div class="slot-inner" id="inner2">
+      <input type="file" accept="image/*" id="f2"
+        onchange="loadPic(2,this)"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;z-index:9">
+      <div id="inner2" class="slot-inner">
         <i class="ti ti-camera slot-ico"></i>
-        <div class="slot-lbl">Perfil<br>izquierdo</div>
+        <div class="slot-lbl">Perfil izquierdo</div>
       </div>
-      <img id="pi2" alt="">
+      <img id="pi2" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;z-index:8;pointer-events:none">
     </div>
   </div>
 
@@ -649,24 +645,26 @@ const P={
 let photos=[null,null,null],ans={},cur=0,lastKeys=[],lastSkinType='',lastDesc='';
 
 function loadPic(i, inp) {
-  if (!inp.files || !inp.files[0]) return;
+  if (!inp || !inp.files || inp.files.length === 0) return;
   var file = inp.files[0];
-
-  /* Step 1: Show preview immediately using objectURL — works on iOS */
-  var previewUrl = URL.createObjectURL(file);
   var img = document.getElementById('pi' + i);
-  img.onload = function() {
-    img.style.display = 'block';
-    document.getElementById('inner' + i).style.display = 'none';
-    document.getElementById('sl' + i).classList.add('ok');
-    URL.revokeObjectURL(previewUrl);
-  };
-  img.src = previewUrl;
+  var inner = document.getElementById('inner' + i);
+  var slot = document.getElementById('sl' + i);
 
-  /* Step 2: Also read as base64 for storing/sending */
+  /* Use blob URL for instant preview — most reliable on iOS Safari */
+  var blobUrl = URL.createObjectURL(file);
+  img.src = blobUrl;
+  img.style.display = 'block';
+  inner.style.display = 'none';
+  slot.style.borderStyle = 'solid';
+  slot.style.borderColor = '#B8975A';
+  slot.classList.add('ok');
+
+  /* Read as base64 for storage (diagnosis card etc) */
   var reader = new FileReader();
   reader.onload = function(e) {
     photos[i] = e.target.result;
+    URL.revokeObjectURL(blobUrl);
   };
   reader.readAsDataURL(file);
 }
@@ -810,7 +808,10 @@ function restart(){
     if (img) { img.style.display = 'none'; img.src = ''; }
     var inner = document.getElementById('inner' + i);
     if (inner) inner.style.display = '';
-    document.getElementById('sl' + i).classList.remove('ok');
+    var slot = document.getElementById('sl' + i);
+    slot.classList.remove('ok');
+    slot.style.borderStyle = '';
+    slot.style.borderColor = '';
     try { document.getElementById('f' + i).value = ''; } catch(e) {}
   });
   ['q0','q1','q2','q3','q4'].forEach(q=>{
@@ -825,4 +826,3 @@ function restart(){
   document.getElementById('capArea').style.display='none';
   goTo(0);
 }
-
