@@ -679,17 +679,15 @@ function loadPic(i, inp) {
   var reader = new FileReader();
   reader.onloadend = function() {
     if (!reader.result || reader.result.length < 100) return;
-    /* Store base64 */
     photos[i] = reader.result;
-    /* Show image — same as test-foto.html */
     var img = document.getElementById('pi' + i);
-    img.onload = function() { img.style.display = 'block'; };
     img.src = reader.result;
-    /* If already loaded (cached) */
-    if (img.complete && img.naturalWidth) img.style.display = 'block';
-    /* Hide placeholder, mark done */
-    document.getElementById('inner' + i).style.display = 'none';
-    document.getElementById('sl' + i).classList.add('ok');
+    /* Force show after short delay — fixes iOS Safari render */
+    setTimeout(function() {
+      img.style.display = 'block';
+      document.getElementById('inner' + i).style.display = 'none';
+      document.getElementById('sl' + i).classList.add('ok');
+    }, 50);
   };
   reader.readAsDataURL(file);
 }
@@ -851,4 +849,3 @@ function restart(){
   document.getElementById('capArea').style.display='none';
   goTo(0);
 }
-
