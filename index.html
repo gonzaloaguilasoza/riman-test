@@ -647,24 +647,24 @@ let photos=[null,null,null],ans={},cur=0,lastKeys=[],lastSkinType='',lastDesc=''
 function loadPic(i, inp) {
   if (!inp || !inp.files || inp.files.length === 0) return;
   var file = inp.files[0];
-  var img = document.getElementById('pi' + i);
-  var inner = document.getElementById('inner' + i);
-  var slot = document.getElementById('sl' + i);
-
-  /* Use blob URL for instant preview — most reliable on iOS Safari */
-  var blobUrl = URL.createObjectURL(file);
-  img.src = blobUrl;
-  img.style.display = 'block';
-  inner.style.display = 'none';
-  slot.style.borderStyle = 'solid';
-  slot.style.borderColor = '#B8975A';
-  slot.classList.add('ok');
-
-  /* Read as base64 for storage (diagnosis card etc) */
   var reader = new FileReader();
-  reader.onload = function(e) {
-    photos[i] = e.target.result;
-    URL.revokeObjectURL(blobUrl);
+  reader.onloadend = function() {
+    if (!reader.result || reader.result.length < 100) return;
+    photos[i] = reader.result;
+    /* Show image */
+    var img = document.getElementById('pi' + i);
+    img.src = reader.result;
+    img.style.display = 'block';
+    img.style.zIndex = '20';
+    /* Push input BEHIND image */
+    document.getElementById('f' + i).style.zIndex = '0';
+    /* Hide placeholder */
+    document.getElementById('inner' + i).style.display = 'none';
+    /* Mark slot done */
+    var slot = document.getElementById('sl' + i);
+    slot.style.borderStyle = 'solid';
+    slot.style.borderColor = '#B8975A';
+    slot.classList.add('ok');
   };
   reader.readAsDataURL(file);
 }
