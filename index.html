@@ -412,36 +412,33 @@ body {
   </div>
 </div>
 
+<!-- hidden file inputs completely outside any styled container -->
+<input type="file" id="f0" accept="image/*" style="display:none" onchange="loadPic(0,this)">
+<input type="file" id="f1" accept="image/*" style="display:none" onchange="loadPic(1,this)">
+<input type="file" id="f2" accept="image/*" style="display:none" onchange="loadPic(2,this)">
+
 <!-- P0: FOTOS -->
 <div class="panel on" id="p0">
   <div class="eyebrow">Paso 01 de 03</div>
   <div class="pt">Captura tu piel</div>
-  <div class="pdesc">Sube una foto de frente y dos de perfil. La IA analiza tu piel y genera tu diagnóstico en segundos.</div>
-  <div class="pgrid" id="pgrid" style="position:relative">
-    <div class="slot" id="sl0">
-      <input type="file" id="f0" accept="image/*" onchange="loadPic(0,this)"
-        style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px">
+  <div class="pdesc">Toca cada recuadro para subir tu foto. La IA analiza tu piel en segundos.</div>
+  <div class="pgrid">
+    <div class="slot" id="sl0" onclick="triggerFile(0)">
       <i class="ti ti-camera slot-ico" id="ico0"></i>
       <div class="slot-lbl" id="lbl0">Foto de<br>frente</div>
-      <div class="slot-ck" id="ck0"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+      <div class="slot-ck" id="ck0" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
     </div>
-    <div class="slot" id="sl1">
-      <input type="file" id="f1" accept="image/*" onchange="loadPic(1,this)"
-        style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px">
+    <div class="slot" id="sl1" onclick="triggerFile(1)">
       <i class="ti ti-camera slot-ico" id="ico1"></i>
       <div class="slot-lbl" id="lbl1">Perfil<br>derecho</div>
-      <div class="slot-ck" id="ck1"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+      <div class="slot-ck" id="ck1" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
     </div>
-    <div class="slot" id="sl2">
-      <input type="file" id="f2" accept="image/*" onchange="loadPic(2,this)"
-        style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px">
+    <div class="slot" id="sl2" onclick="triggerFile(2)">
       <i class="ti ti-camera slot-ico" id="ico2"></i>
       <div class="slot-lbl" id="lbl2">Perfil<br>izquierdo</div>
-      <div class="slot-ck" id="ck2"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+      <div class="slot-ck" id="ck2" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
     </div>
   </div>
-  <!-- preview imgs live OUTSIDE slots — no overflow:hidden clipping -->
-  <div id="previews" style="display:none"></div>
   <div class="photo-note">Sin maquillaje · buena iluminación · cara limpia</div>
   <div class="err" id="perr">Sube las 3 fotos para continuar</div>
   <button class="btn" onclick="tryNext(1)">Continuar <i class="ti ti-arrow-right"></i></button>
@@ -783,7 +780,7 @@ function restart(){
     slot.style.backgroundImage='';
     slot.style.backgroundSize='';
     slot.style.backgroundPosition='';
-    slot.style.borderStyle='dashed';
+    slot.style.borderStyle='';
     slot.style.borderColor='';
     slot.classList.remove('ok');
     document.getElementById('ico'+i).style.display='';
@@ -803,4 +800,3 @@ function restart(){
   document.getElementById('capArea').style.display='none';
   goTo(0);
 }
-
