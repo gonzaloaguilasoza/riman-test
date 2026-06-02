@@ -131,7 +131,7 @@ body {
   aspect-ratio: 3/4; border: 1px dashed var(--sand); border-radius: 10px;
   background: var(--pearl); display: flex; flex-direction: column;
   align-items: center; justify-content: center; cursor: pointer;
-  position: relative; overflow: hidden; transition: all .2s;
+  position: relative; transition: all .2s;
   /* large tap target */
   -webkit-user-select: none; user-select: none;
 }
@@ -412,32 +412,30 @@ body {
   </div>
 </div>
 
-<!-- hidden file inputs completely outside any styled container -->
-<input type="file" id="f0" accept="image/*" style="display:none" onchange="loadPic(0,this)">
-<input type="file" id="f1" accept="image/*" style="display:none" onchange="loadPic(1,this)">
-<input type="file" id="f2" accept="image/*" style="display:none" onchange="loadPic(2,this)">
-
 <!-- P0: FOTOS -->
 <div class="panel on" id="p0">
   <div class="eyebrow">Paso 01 de 03</div>
   <div class="pt">Captura tu piel</div>
   <div class="pdesc">Toca cada recuadro para subir tu foto. La IA analiza tu piel en segundos.</div>
   <div class="pgrid">
-    <div class="slot" id="sl0" onclick="triggerFile(0)">
+    <label class="slot" id="sl0" for="f0">
+      <input type="file" id="f0" accept="image/*" onchange="loadPic(0,this)" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px">
       <i class="ti ti-camera slot-ico" id="ico0"></i>
       <div class="slot-lbl" id="lbl0">Foto de<br>frente</div>
       <div class="slot-ck" id="ck0" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
-    </div>
-    <div class="slot" id="sl1" onclick="triggerFile(1)">
+    </label>
+    <label class="slot" id="sl1" for="f1">
+      <input type="file" id="f1" accept="image/*" onchange="loadPic(1,this)" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px">
       <i class="ti ti-camera slot-ico" id="ico1"></i>
       <div class="slot-lbl" id="lbl1">Perfil<br>derecho</div>
       <div class="slot-ck" id="ck1" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
-    </div>
-    <div class="slot" id="sl2" onclick="triggerFile(2)">
+    </label>
+    <label class="slot" id="sl2" for="f2">
+      <input type="file" id="f2" accept="image/*" onchange="loadPic(2,this)" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px">
       <i class="ti ti-camera slot-ico" id="ico2"></i>
       <div class="slot-lbl" id="lbl2">Perfil<br>izquierdo</div>
       <div class="slot-ck" id="ck2" style="display:none"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
-    </div>
+    </label>
   </div>
   <div class="photo-note">Sin maquillaje · buena iluminación · cara limpia</div>
   <div class="err" id="perr">Sube las 3 fotos para continuar</div>
@@ -627,18 +625,30 @@ let photos=[null,null,null],ans={},cur=0,lastKeys=[],lastSkinType='',lastDesc=''
 function loadPic(i,inp){
   if(!inp.files||!inp.files[0])return;
   var file=inp.files[0];
-  var reader=new FileReader();
-  reader.onloadend=function(){
-    photos[i]=reader.result;
-    var img=document.getElementById('pi'+i);
-    img.src=reader.result;
-    img.style.display='block';
-    document.getElementById('sl'+i).classList.add('ok');
-    /* force repaint on iOS */
-    document.getElementById('sl'+i).style.opacity='0.99';
-    setTimeout(function(){document.getElementById('sl'+i).style.opacity='1';},50);
+  var url=URL.createObjectURL(file);
+  var tmp=new Image();
+  tmp.onload=function(){
+    var MAX=600, scale=Math.min(1,MAX/tmp.width);
+    var w=Math.round(tmp.width*scale), h=Math.round(tmp.height*scale);
+    var c=document.createElement('canvas');
+    c.width=w; c.height=h;
+    c.getContext('2d').drawImage(tmp,0,0,w,h);
+    var b64=c.toDataURL('image/jpeg',0.8);
+    URL.revokeObjectURL(url);
+    photos[i]=b64;
+    var slot=document.getElementById('sl'+i);
+    slot.style.backgroundImage='url('+b64+')';
+    slot.style.backgroundSize='cover';
+    slot.style.backgroundPosition='center';
+    slot.style.borderColor='#B8975A';
+    slot.style.borderStyle='solid';
+    document.getElementById('ico'+i).style.display='none';
+    document.getElementById('lbl'+i).style.display='none';
+    document.getElementById('ck'+i).style.display='flex';
+    slot.classList.add('ok');
   };
-  reader.readAsDataURL(file);
+  tmp.onerror=function(){ URL.revokeObjectURL(url); };
+  tmp.src=url;
 }
 function pick(qid,idx){
   document.querySelectorAll('#'+qid+' .opt').forEach((o,i)=>o.classList.toggle('s',i===idx));
